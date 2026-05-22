@@ -118,12 +118,8 @@ footer strong{color:rgba(255,255,255,.75)}
       <span class="s-icon"><svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg></span>
       <input type="text" id="searchInput" placeholder="搜尋文章標題、作者、關鍵字…" autocomplete="off">
     </div>
-    <div class="tags-row">
+    <div class="tags-row" id="tagsRow">
       <button class="tag-btn active" data-tag="all">全部</button>
-      <button class="tag-btn" data-tag="輔導">輔導</button>
-      <button class="tag-btn" data-tag="班級經營">班級經營</button>
-      <button class="tag-btn" data-tag="蘔師溝通">蘔師溝通</button>
-      <button class="tag-btn" data-tag="法規流程">法規流程</button>
     </div>
   </div>
 </div>
@@ -152,7 +148,7 @@ function parseSheet(raw){
     const fv=g(iF).toLowerCase();
     const featured=['true','精選','yes','1'].includes(fv);
     let tags=['輔導','班級經營'];
-    if(iTg>=0&&g(iTg))tags=g(iTg).split(/[,、，]+/).filter(Boolean);
+    if(iTg>=0&&g(iTg))tags=g(iTg).split(/[,、，\s*]+/).map(t=>t.trim()).filter(Boolean);
     return{url:g(iU),title:t,author:g(iA),date:g(iD).substring(0,10),summary:intro.substring(0,220),image:g(iImg),tags,featured};
   }).filter(Boolean);
 }
@@ -200,11 +196,32 @@ function startTimer(){
 document.getElementById('heroPrev').onclick=()=>{goHero(heroIdx-1);startTimer()};
 document.getElementById('heroNext').onclick=()=>{goHero(heroIdx+1);startTimer()};
 
+function buildTagBtns(){
+  const row = document.getElementById('tagsRow');
+  // 移除舊的（保留「全部」）
+  Array.from(row.querySelectorAll('.tag-btn:not([data-tag="all"])')).forEach(b=>b.remove());
+  // 收集所有出現過的 tag（去重、排序）
+  const tagSet = new Set();
+  DATA.forEach(a => a.tags.forEach(t => { if(t) tagSet.add(t.trim()); }));
+  [...tagSet].sort().forEach(tag => {
+    const b = document.createElement('button');
+    b.className = 'tag-btn';
+    b.dataset.tag = tag;
+    b.textContent = tag;
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.tag-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      activeTag = tag; page = 1; renderCards();
+    });
+    row.appendChild(b);
+  });
+}
+
 function filtered(){
   const q=searchQ.toLowerCase();
   return DATA.filter(a=>{
     const mq=!q||(a.title+a.author+a.summary).toLowerCase().includes(q);
-    const mt=activeTag==='all'||a.tags.includes(activeTag)||activeTag==='\u8614\u5e2b\u6e9d\u901a'||activeTag==='\u6cd5\u898f\u6d41\u7a0b';
+    const mt=activeTag==='all'||a.tags.includes(activeTag);
     return mq&&mt;
   });
 }
@@ -265,17 +282,18 @@ async function loadData(){
     const parsed=parseSheet(text);
     if(parsed.length>0)DATA=parsed; else DATA=DEMO;
   }catch(e){DATA=DEMO;}
+  buildTagBtns();
   buildHero(DATA.filter(a=>a.featured));
   startTimer();
   renderCards();
 }
 
 document.getElementById('searchInput').addEventListener('input',e=>{searchQ=e.target.value;page=1;renderCards()});
-document.querySelectorAll('.tag-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    document.querySelectorAll('.tag-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');activeTag=btn.dataset.tag;page=1;renderCards();
-  });
+// 「全部」按鈕
+document.querySelector('.tag-btn[data-tag="all"]').addEventListener('click',()=>{
+  document.querySelectorAll('.tag-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.tag-btn[data-tag="all"]').classList.add('active');
+  activeTag='all'; page=1; renderCards();
 });
 loadData();
 </script>

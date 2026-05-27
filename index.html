@@ -144,7 +144,7 @@ function buildTagBtns(){
   DATA.forEach(a=>a.tags.forEach(t=>{if(t)tagSet.add(t)}));
   if(!tagSet.size)return;
   // 固定優先顯示的標籤（依此順序排在前面）
-  const PINNED=['輔導','班級經營','事件處理','法規流程','早期預防','教學資源','親師溝通'];
+  const PINNED=['教學資源','輔導','班級經營','事件處理','法規流程','早期預防','親師溝通','衝突處理','關係霸凌'];
   const pinned=PINNED.filter(t=>tagSet.has(t));
   const rest=[...tagSet].filter(t=>!PINNED.includes(t)).sort();
   [...pinned,...rest].forEach(tag=>{

@@ -101,7 +101,7 @@ footer strong{color:rgba(255,255,255,.75)}
 <div class="site-header">
   <div class="sh-ring sh-r1"></div><div class="sh-ring sh-r2"></div>
   <div class="sh-eyebrow">Teachers Resource Hub</div>
-  <h1 class="sh-title">校園霸凌防制與<span class="acc">學生衝突處理</span></h1>
+  <h1 class="sh-title"><span class="acc">校園霸凌防制</span>與學生衝突處理</h1>
   <div class="sh-sub">教師實務指引與精選資源庫</div>
 </div>
 <div class="hero-wrap">
@@ -326,7 +326,20 @@ async function loadData(){
         url:String(r['網址']||''),
         title,
         author:String(r['article_author']||''),
-        date:String(r['publish_time']||'').substring(0,10),
+        date:(()=>{
+        const raw=String(r['publish_time']||'');
+        if(!raw)return'';
+        // 嘗試解析各種格式
+        const d=new Date(raw);
+        if(!isNaN(d)){
+          const y=d.getFullYear();
+          const m=String(d.getMonth()+1).padStart(2,'0');
+          const day=String(d.getDate()).padStart(2,'0');
+          return y+'-'+m+'-'+day;
+        }
+        // 如果已經是 YYYY-MM-DD 格式
+        return raw.substring(0,10);
+      })(),
         summary:String(r['article_introduction']||'').trim().replace(/\n/g,' ').substring(0,220),
         image:String(r['article_photo src']||''),
         tags,featured,resource

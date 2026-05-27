@@ -143,7 +143,11 @@ function buildTagBtns(){
   const tagSet=new Set();
   DATA.forEach(a=>a.tags.forEach(t=>{if(t)tagSet.add(t)}));
   if(!tagSet.size)return;
-  [...tagSet].sort().forEach(tag=>{
+  // 固定優先顯示的標籤（依此順序排在前面）
+  const PINNED=['輔導','班級經營','親師溝通','法規流程'];
+  const pinned=PINNED.filter(t=>tagSet.has(t));
+  const rest=[...tagSet].filter(t=>!PINNED.includes(t)).sort();
+  [...pinned,...rest].forEach(tag=>{
     const b=document.createElement('button');
     b.className='tag-btn';b.dataset.tag=tag;b.textContent=tag;
     b.onclick=()=>{
@@ -325,7 +329,7 @@ async function loadData(){
       return{
         url:String(r['網址']||''),
         title,
-        author:String(r['article_author']||''),
+        author:String(r['article_author']||r['作者']||r['author']||''),
         date:(()=>{
         const raw=String(r['publish_time']||'');
         if(!raw)return'';
